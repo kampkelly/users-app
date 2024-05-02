@@ -1,4 +1,8 @@
-import { Injectable } from '@nestjs/common';
+import {
+  Injectable,
+  NotFoundException,
+  InternalServerErrorException,
+} from '@nestjs/common';
 
 @Injectable()
 export class ReqresService {
@@ -21,11 +25,12 @@ export class ReqresService {
     }
     const response = await fetch(`${this.baseUrl}/${path}`, options);
     if (response.status == 404) {
+      throw new NotFoundException();
       return {};
     }
 
     if (!response.ok) {
-      throw new Error(`HTTP error! status: ${response.status}`);
+      throw new InternalServerErrorException();
     }
     const data = await response.json();
     return data;

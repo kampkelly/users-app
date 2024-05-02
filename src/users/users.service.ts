@@ -1,13 +1,13 @@
 import * as fs from 'fs';
 import { v4 } from 'uuid';
-import { Injectable, Inject } from '@nestjs/common';
+import { Injectable, Inject, NotFoundException } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { ClientProxy } from '@nestjs/microservices';
 import { Model } from 'mongoose';
 
 import { User, UserDocument } from './users.schema';
 import { Avatar, AvatarDocument } from './avatar.schema';
-import { CreateUserDto, GetUserDto } from './dto/index';
+import { CreateUserDto } from './dto/index';
 import { ReqresService } from '../libs/reqres.service';
 import { EmailService } from '../libs/email.service';
 
@@ -32,7 +32,7 @@ export class UsersService {
       job: userRequest.job,
     });
 
-    const createdUser = await newUser.save();
+    await newUser.save();
 
     await this.emailService.sendEmail();
     this.client.emit('user_created', 'User has been created');
@@ -53,7 +53,6 @@ export class UsersService {
     const existingAvatar = await this.avatarModel.findOne({ userId });
 
     if (existingAvatar?.userId) {
-
       try {
         const base64Data = fs.readFileSync(
           `avatars/${existingAvatar.hash}.jpg`,
@@ -95,5 +94,24 @@ export class UsersService {
 
     const base64Data = buffer.toString('base64');
     return base64Data;
+  }
+
+  async deleteUserAvatar(userId: string): Promise<any> {
+    const existingAvatar = await this.avatarModel.findOne({ userId });
+
+    if (!existingAvatar?.userId) {
+      throw new NotFoundException('User does not exist');
+    }
+
+    if (existingAvatar?.userId) {
+      try {
+        fs.unlinkSync(`avatars/${existingAvatar.hash}.jpg`);
+      } catch (error) {
+        // continue
+      }
+    }
+
+    await this.avatarModel.deleteOne({ _id: existingAvatar._id }).exec();
+    return { message: 'Avatar file deleted successfully' };
   }
 }

@@ -1,4 +1,5 @@
 import * as fs from 'fs';
+import { NotFoundException } from '@nestjs/common';
 import { Test, TestingModule } from '@nestjs/testing';
 import { getModelToken } from '@nestjs/mongoose';
 import Mongoose from 'mongoose';
@@ -162,6 +163,25 @@ describe('UsersController', () => {
     expect(typeof result.avatar).toBe('string');
 
     mockReadFileSync.mockRestore();
+  });
+
+  it('should delete user avatar', async () => {
+    const mockRemoveFileSync = jest.spyOn(fs, 'unlinkSync').mockReturnValue();
+
+    const result = await userController.deleteUserAvatar('1');
+
+    expect(mockRemoveFileSync).toHaveBeenCalledWith(
+      expect.stringContaining('avatars/'),
+    );
+    expect(result.message).toBe('Avatar file deleted successfully');
+
+    mockRemoveFileSync.mockRestore();
+  });
+
+  it('should not delete user avatar if user not found', async () => {
+    await expect(userController.deleteUserAvatar('1')).rejects.toThrow(
+      NotFoundException,
+    );
 
     await avatarModel.deleteMany({});
   });
