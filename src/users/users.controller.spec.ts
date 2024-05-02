@@ -1,3 +1,4 @@
+import * as fs from 'fs';
 import { Test, TestingModule } from '@nestjs/testing';
 import { getModelToken } from '@nestjs/mongoose';
 import Mongoose from 'mongoose';
@@ -10,13 +11,16 @@ import { UsersService } from './users.service';
 import { ReqresService } from '../libs/reqres.service';
 import { EmailService } from '../libs/email.service';
 import { User, UserDocument, UserSchema } from './users.schema';
+import { Avatar, AvatarDocument, AvatarSchema } from './avatar.schema';
 
 describe('UsersController', () => {
   let userController: UsersController;
   let client: ClientProxy;
+  let module: TestingModule;
+  let avatarModel;
 
   beforeAll(async () => {
-    const module: TestingModule = await Test.createTestingModule({
+    module = await Test.createTestingModule({
       controllers: [UsersController],
       providers: [
         UsersService,
@@ -35,11 +39,22 @@ describe('UsersController', () => {
             return Mongoose.model<UserDocument>(User.name, UserSchema);
           },
         },
+        {
+          provide: getModelToken(Avatar.name),
+          useFactory: () => {
+            Mongoose.connect(process.env.TEST_DB_URL);
+            return Mongoose.model<AvatarDocument>(Avatar.name, AvatarSchema);
+          },
+        },
       ],
     }).compile();
 
     client = module.get<ClientProxy>('USER_SERVICE');
     userController = module.get<UsersController>(UsersController);
+
+    avatarModel = module.get<Mongoose.Model<AvatarDocument>>(
+      getModelToken(Avatar.name),
+    );
   });
 
   it('should be defined', () => {
@@ -92,5 +107,62 @@ describe('UsersController', () => {
     expect(result).toEqual({ user: userResponse });
 
     fetchMock.restore();
+  });
+
+  it('should get a user avatar for new user', async () => {
+    const userResponse = {
+      id: 1,
+      email: 'janet.weaver@reqres.in',
+      first_name: 'Janet',
+      last_name: 'Weaver',
+      avatar: 'https://reqres.in/img/faces/2-image.jpg',
+    };
+    fetchMock.get('https://reqres.in/api/users/1', {
+      status: 200,
+      body: JSON.stringify({ data: userResponse }),
+    });
+
+    const arrBuffer = new ArrayBuffer(2);
+
+    fetchMock.get(userResponse.avatar, {
+      status: 200,
+      body: arrBuffer,
+    });
+
+    const mockWriteFileSync = jest
+      .spyOn(fs, 'writeFileSync')
+      .mockImplementation(() => {});
+
+    const result = await userController.getUserAvatar('1');
+
+    expect(mockWriteFileSync).toHaveBeenCalledWith(
+      expect.any(String),
+      expect.any(Buffer),
+    );
+
+    expect(typeof result.avatar).toBe('string');
+
+    fetchMock.restore();
+    mockWriteFileSync.mockRestore();
+  });
+
+  it('should retrieve user avatar for already stored user', async () => {
+    const expectedBase64 = 'base64string';
+    const mockReadFileSync = jest
+      .spyOn(fs, 'readFileSync')
+      .mockReturnValue(expectedBase64);
+
+    const result = await userController.getUserAvatar('1');
+
+    expect(mockReadFileSync).toHaveBeenCalledWith(
+      expect.stringContaining('avatars/'),
+      { encoding: 'base64' },
+    );
+    expect(result.avatar).toBe(expectedBase64);
+    expect(typeof result.avatar).toBe('string');
+
+    mockReadFileSync.mockRestore();
+
+    await avatarModel.deleteMany({});
   });
 });

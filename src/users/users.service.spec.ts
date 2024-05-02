@@ -10,6 +10,7 @@ import { UsersService } from './users.service';
 import { ReqresService } from '../libs/reqres.service';
 import { EmailService } from '../libs/email.service';
 import { User, UserDocument, UserSchema } from './users.schema';
+import { Avatar, AvatarDocument, AvatarSchema } from './avatar.schema';
 
 describe('UsersService', () => {
   let userService: UsersService;
@@ -32,6 +33,13 @@ describe('UsersService', () => {
           useFactory: () => {
             Mongoose.connect(process.env.TEST_DB_URL);
             return Mongoose.model<UserDocument>(User.name, UserSchema);
+          },
+        },
+        {
+          provide: getModelToken(Avatar.name),
+          useFactory: () => {
+            Mongoose.connect(process.env.TEST_DB_URL);
+            return Mongoose.model<AvatarDocument>(Avatar.name, AvatarSchema);
           },
         },
       ],

@@ -20,6 +20,10 @@ export class ReqresService {
       options.body = JSON.stringify(body);
     }
     const response = await fetch(`${this.baseUrl}/${path}`, options);
+    if (response.status == 404) {
+      return {};
+    }
+
     if (!response.ok) {
       throw new Error(`HTTP error! status: ${response.status}`);
     }

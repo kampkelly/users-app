@@ -25,4 +25,10 @@ export class UsersController {
     const userData = await this.usersService.getUser(id);
     return { user: userData.data };
   }
+
+  @Get('user/:id/avatar')
+  async getUserAvatar(@Param('id') id: string) {
+    const avatar = await this.usersService.getUserAvatar(id);
+    return { avatar };
+  }
 }
