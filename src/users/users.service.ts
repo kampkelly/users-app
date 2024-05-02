@@ -4,7 +4,7 @@ import { ClientProxy } from '@nestjs/microservices';
 import { Model } from 'mongoose';
 
 import { User, UserDocument } from './users.schema';
-import { CreateUserDto } from './dto/index';
+import { CreateUserDto, GetUserDto } from './dto/index';
 import { ReqresService } from '../libs/reqres.service';
 import { EmailService } from '../libs/email.service';
 
@@ -33,6 +33,15 @@ export class UsersService {
 
     await this.emailService.sendEmail();
     this.client.emit('user_created', 'User has been created');
+
+    return userRequest;
+  }
+
+  async getUser(id: string): Promise<any> {
+    const userRequest = await this.reqresService.makeRequest(
+      `users/${id}`,
+      'GET',
+    );
 
     return userRequest;
   }
