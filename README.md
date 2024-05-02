@@ -4,18 +4,11 @@
 
 ## Description
 
-A NestJs Api for BAckend Sodtware Web Engineer.
+A NestJs Api for Backend Sodtware Web Engineer Position
 
 ## Tools
 NestJs, Typescript, MongoDB, RabbitMQ
 
-
-## Installation Steps
-
-
-```bash
-$ npm install
-```
 
 ## Running the app
 

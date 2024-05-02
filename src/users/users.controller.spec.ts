@@ -110,6 +110,18 @@ describe('UsersController', () => {
     fetchMock.restore();
   });
 
+  it('should throw exception if user not found on getting user', async () => {
+    fetchMock.get('https://reqres.in/api/users/1', {
+      throws: new NotFoundException('User does not exist'),
+    });
+
+    await expect(userController.getUser('1')).rejects.toThrow(
+      NotFoundException,
+    );
+
+    fetchMock.restore();
+  });
+
   it('should get a user avatar for new user', async () => {
     const userResponse = {
       id: 1,

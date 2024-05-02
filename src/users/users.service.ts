@@ -23,30 +23,33 @@ export class UsersService {
   ) {}
 
   async createUser(createUserDto: CreateUserDto): Promise<string> {
-    const userRequest = await this.reqresService.makeRequest('users', 'POST', {
+    const userResponse = await this.reqresService.makeRequest('users', 'POST', {
       ...createUserDto,
     });
     const newUser = new this.userModel({
-      userId: userRequest.id,
-      name: userRequest.name,
-      job: userRequest.job,
+      userId: userResponse.id,
+      name: userResponse.name,
+      job: userResponse.job,
     });
 
     await newUser.save();
 
+    // send email
     await this.emailService.sendEmail();
+
+    // emit an event
     this.client.emit('user_created', 'User has been created');
 
-    return userRequest;
+    return userResponse;
   }
 
   async getUser(id: string): Promise<any> {
-    const userRequest = await this.reqresService.makeRequest(
+    const userResponse = await this.reqresService.makeRequest(
       `users/${id}`,
       'GET',
     );
 
-    return userRequest;
+    return userResponse;
   }
 
   async getUserAvatar(userId: string): Promise<any> {
@@ -64,16 +67,16 @@ export class UsersService {
       }
     }
 
-    const userRequest = await this.reqresService.makeRequest(
+    const userResponse = await this.reqresService.makeRequest(
       `users/${userId}`,
       'GET',
     );
 
-    if (!userRequest.data) {
+    if (!userResponse.data) {
       return null;
     }
 
-    const response = await fetch(userRequest.data.avatar);
+    const response = await fetch(userResponse.data.avatar);
 
     if (!response.ok) {
       throw new Error(`Failed to fetch image: ${response.statusText}`);
@@ -86,7 +89,7 @@ export class UsersService {
     fs.writeFileSync(fileName, buffer);
 
     const newAvatar = new this.avatarModel({
-      userId: userRequest.data.id,
+      userId: userResponse.data.id,
       hash: fileNameHash,
     });
 

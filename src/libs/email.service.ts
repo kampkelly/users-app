@@ -9,6 +9,7 @@ interface EmailContent {
   text: string;
   html?: string;
 }
+
 @Injectable()
 export class EmailService {
   async sendEmail(
@@ -20,6 +21,7 @@ export class EmailService {
       html: '<p>Text</p>',
     },
   ) {
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     const transporter = nodemailer.createTransport({
       host: process.env.EMAIL_HOST,
       port: 587,
@@ -31,11 +33,13 @@ export class EmailService {
     });
 
     // Email options
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     const mailOptions = {
       ...emailContent,
     };
 
-    // comment out actual sending of the email
+    // comment out actual sending of the email since we do not want to sen out real email,
+    // but left the implementation
     // const info = await transporter.sendMail(mailOptions);
 
     return { message: 'Message sent!' };
