@@ -3,6 +3,8 @@ import { MongooseModule } from '@nestjs/mongoose';
 import { ClientsModule, Transport } from '@nestjs/microservices';
 
 import { UsersService } from './users.service';
+import { ReqresService } from '../libs/reqres.service';
+import { EmailService } from '../libs/email.service';
 import { UsersController } from './users.controller';
 import { User, UserSchema } from './users.schema';
 
@@ -24,6 +26,6 @@ import { User, UserSchema } from './users.schema';
     ]),
   ],
   controllers: [UsersController],
-  providers: [UsersService],
+  providers: [UsersService, ReqresService, EmailService],
 })
 export class UsersModule {}
